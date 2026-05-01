@@ -5,82 +5,47 @@
 }
 
 :root {
-  --teal: #00D4C8;
-  --teal-dim: rgba(0, 212, 200, 0.15);
   --bg: #0a0a0a;
+  --teal: #00D4C8;
   --white: #ffffff;
-  --gray: #888888;
-  --font-display: 'Creepster', cursive;
-  --font-body: 'Space Grotesk', sans-serif;
 }
 
 html {
   background: var(--bg);
   color: var(--white);
-  font-family: var(--font-body);
   overflow-x: hidden;
   scroll-behavior: auto;
 }
 
 body {
-  /* Canvas provides the dark bg — body just needs overflow control */
   background: var(--bg);
   overflow-x: hidden;
 }
 
-/* Lenis smooth scroll */
-html.lenis {
-  height: auto;
+#root {
+  position: relative;
 }
 
-.lenis.lenis-smooth {
-  scroll-behavior: auto !important;
-}
-
-.lenis.lenis-smooth [data-lenis-prevent] {
-  overscroll-behavior: contain;
-}
-
-.lenis.lenis-stopped {
-  overflow: hidden;
-}
-
-.lenis.lenis-scrolling iframe {
-  pointer-events: none;
-}
-
-/* ── Typography helpers ── */
-.label {
-  font-family: var(--font-body);
-  font-size: 0.65rem;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  color: var(--gray);
-}
-
-.teal { color: var(--teal); }
-
-/* ── Canvas — opaque full-screen layer, provides the dark bg ── */
-#canvas-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 5;
-  pointer-events: none;
-}
-
-/* ── Sections — sit above canvas (z:5), text floats over the can ── */
+/* ── Scroll spacer sections ─────────────────────────────────────────────
+   Each section is a 100vh invisible block that gives the page the height
+   needed to drive the crossfade in MockupStage. They're fully transparent
+   so the fixed mockup behind them shows through unobstructed. */
 section {
   position: relative;
-  z-index: 10;
+  z-index: 10;       /* sits above the stage, but content is empty */
   min-height: 100vh;
   width: 100%;
   background: transparent;
+  pointer-events: none;
 }
 
-/* ── Scrollbar ── */
+/* Lenis smooth scroll classes */
+html.lenis { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
+.lenis.lenis-scrolling iframe { pointer-events: none; }
+
+/* Custom scrollbar */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--teal-dim); border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: rgba(0, 212, 200, 0.2); border-radius: 2px; }

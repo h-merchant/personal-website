@@ -1,27 +1,21 @@
 import { useScrollRig } from './hooks/useScrollRig.js'
-import CanScene from './components/canvas/CanScene.jsx'
-import Nav from './components/Nav.jsx'
-import Hero from './components/sections/Hero.jsx'
-import About from './components/sections/About.jsx'
-import Experience from './components/sections/Experience.jsx'
+import MockupStage from './components/MockupStage.jsx'
 
 export default function App() {
-  // Initializes Lenis smooth scroll + GSAP ticker integration
+  // Lenis smooth scroll + shared scrollState
   useScrollRig()
 
   return (
     <>
-      {/* Fixed 3D canvas — lives behind everything */}
-      <CanScene />
+      {/* Full-screen mockup crossfade stage */}
+      <MockupStage />
 
-      {/* Fixed top nav */}
-      <Nav />
-
-      {/* Scrollable content */}
+      {/* Scrollable spacer — three "screens" of height drive the crossfade.
+          Each section is transparent: the mockup IS the visual. */}
       <main>
-        <Hero />
-        <About />
-        <Experience />
+        <section id="section-hero" />
+        <section id="section-about" />
+        <section id="section-experience" />
       </main>
     </>
   )
