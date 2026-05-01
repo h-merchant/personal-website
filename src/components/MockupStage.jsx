@@ -3,62 +3,60 @@ import { scrollState } from '../hooks/scrollState.js'
 import styles from './MockupStage.module.css'
 
 /**
- * Fixed full-screen "stage" that crossfades between the mockup images
- * as the user scrolls. Each mockup is a complete designed page — we just
- * smoothly transition between them, giving the illusion of motion.
+ * 3D scroll-driven scene.
  *
- * Scroll progress maps:
- *   0.00 – 0.30   hero (full opacity)
- *   0.30 – 0.45   hero → about crossfade
- *   0.45 – 0.60   about (full opacity)
- *   0.60 – 0.75   about → experience crossfade
- *   0.75 – 1.00   experience (full opacity)
+ * The page is treated as one giant 3D card that rotates 180° around the
+ * Y axis as the user scrolls:
+ *   • 0° → 90°    Hero (front face) tilts away
+ *   • 90°         Card edge-on (invisible)
+ *   • 90° → 180°  Experience (back face) tilts in
+ *
+ * The About mockup is overlaid on top during the middle of the scroll
+ * (when the card is edge-on / mostly invisible) so it bridges the flip
+ * cleanly. This gives a real 3D "spinning can" feel while preserving
+ * the photographic quality of the mockup art.
  */
 export default function MockupStage() {
-  const heroRef = useRef(null)
+  const cardRef  = useRef(null)
   const aboutRef = useRef(null)
-  const expRef = useRef(null)
-
-  // Slight parallax / scale on each image as you scroll within its section
-  const heroWrapRef = useRef(null)
-  const aboutWrapRef = useRef(null)
-  const expWrapRef = useRef(null)
+  const stageRef = useRef(null)
 
   useEffect(() => {
     let raf
     const clamp01 = (v) => Math.max(0, Math.min(1, v))
-    const lerp = (a, b, t) => a + (b - a) * t
+    // ease-in-out so the rotation feels weighted near the middle
+    const easeInOut = (t) => t * t * (3 - 2 * t)
 
     const tick = () => {
       const p = scrollState.progress
 
-      // ── Crossfade alphas ──────────────────────────────────────────────
-      // Hero stays solid 0–0.30, fades out by 0.45
-      const heroA = p < 0.30 ? 1 : clamp01(1 - (p - 0.30) / 0.15)
-      // About fades in 0.30–0.45, holds, fades out 0.60–0.75
+      // ── Card rotation: 0° → 180° across the page, eased ──────────────
+      const cardRot = easeInOut(p) * 180
+
+      // Subtle parallax-style scale for cinematic breathing
+      const cardScale = 1 + Math.sin(p * Math.PI) * 0.04
+
+      // ── About overlay: bridge the flip ───────────────────────────────
+      // Fade in 25%–40%, hold 40%–60%, fade out 60%–75%
       const aboutA =
-        p < 0.30 ? 0 :
-        p < 0.45 ? (p - 0.30) / 0.15 :
+        p < 0.25 ? 0 :
+        p < 0.40 ? (p - 0.25) / 0.15 :
         p < 0.60 ? 1 :
         p < 0.75 ? clamp01(1 - (p - 0.60) / 0.15) : 0
-      // Experience fades in 0.60–0.75, then solid
-      const expA = p < 0.60 ? 0 : clamp01((p - 0.60) / 0.15)
 
-      // ── Subtle scale "breathing" for cinematic feel ───────────────────
-      // Hero scales 1.0 → 1.05 across its dwell time
-      const heroScale = lerp(1.0, 1.06, clamp01(p / 0.45))
-      // About also slowly scales while visible
-      const aboutScale = lerp(1.0, 1.05, clamp01((p - 0.30) / 0.45))
-      // Experience scales similarly
-      const expScale = lerp(1.0, 1.04, clamp01((p - 0.60) / 0.40))
+      // About also gets a tiny rotation so it feels in motion, not static
+      const aboutRot = (p - 0.50) * 30   // ~−7.5° to +7.5° over its lifetime
+      const aboutScale = 1 + Math.sin((p - 0.30) / 0.40 * Math.PI) * 0.03
 
-      if (heroRef.current)  heroRef.current.style.opacity = heroA
-      if (aboutRef.current) aboutRef.current.style.opacity = aboutA
-      if (expRef.current)   expRef.current.style.opacity = expA
-
-      if (heroWrapRef.current)  heroWrapRef.current.style.transform = `scale(${heroScale})`
-      if (aboutWrapRef.current) aboutWrapRef.current.style.transform = `scale(${aboutScale})`
-      if (expWrapRef.current)   expWrapRef.current.style.transform = `scale(${expScale})`
+      if (cardRef.current) {
+        cardRef.current.style.transform =
+          `rotateY(${cardRot}deg) scale(${cardScale})`
+      }
+      if (aboutRef.current) {
+        aboutRef.current.style.opacity = aboutA
+        aboutRef.current.style.transform =
+          `rotateY(${aboutRot}deg) scale(${aboutScale})`
+      }
 
       raf = requestAnimationFrame(tick)
     }
@@ -67,16 +65,34 @@ export default function MockupStage() {
   }, [])
 
   return (
-    <div className={styles.stage}>
-      <div ref={heroWrapRef} className={styles.layer}>
-        <img ref={heroRef} src="mockups/hero.png" alt="" className={styles.img} />
+    <div ref={stageRef} className={styles.stage}>
+      {/* The 3D card with hero/experience as its two faces */}
+      <div className={styles.cardWrap}>
+        <div ref={cardRef} className={styles.card}>
+          <img
+            className={`${styles.face} ${styles.front}`}
+            src="mockups/hero.png"
+            alt=""
+            draggable={false}
+          />
+          <img
+            className={`${styles.face} ${styles.back}`}
+            src="mockups/experience.png"
+            alt=""
+            draggable={false}
+          />
+        </div>
       </div>
-      <div ref={aboutWrapRef} className={styles.layer}>
-        <img ref={aboutRef} src="mockups/about.png" alt="" className={styles.img} style={{ opacity: 0 }} />
-      </div>
-      <div ref={expWrapRef} className={styles.layer}>
-        <img ref={expRef} src="mockups/experience.png" alt="" className={styles.img} style={{ opacity: 0 }} />
-      </div>
+
+      {/* About mockup overlays during the flip */}
+      <img
+        ref={aboutRef}
+        className={styles.aboutOverlay}
+        src="mockups/about.png"
+        alt=""
+        draggable={false}
+        style={{ opacity: 0 }}
+      />
     </div>
   )
 }

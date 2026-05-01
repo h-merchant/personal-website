@@ -5,23 +5,62 @@
   pointer-events: none;
   overflow: hidden;
   background: #0a0a0a;
+  /* Perspective makes the rotateY look like real 3D depth */
+  perspective: 1800px;
+  perspective-origin: center center;
 }
 
-.layer {
+/* Wrapper centers the card and gives it a 3D context */
+.cardWrap {
   position: absolute;
   inset: 0;
-  will-change: transform;
+  transform-style: preserve-3d;
 }
 
-.img {
+/* The card itself — flips on Y axis based on scroll */
+.card {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
+  transform-origin: center center;
+}
+
+/* Each face is a full-screen mockup image */
+.face {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;
   object-position: center;
-  will-change: opacity;
+  backface-visibility: hidden;
   user-select: none;
   -webkit-user-drag: none;
-  background: #0a0a0a;
+}
+
+.front {
+  /* faces the camera at rotation 0° */
+  transform: rotateY(0deg);
+}
+
+.back {
+  /* baked-in 180° so it faces away initially, then becomes visible
+     when the card has rotated past 90° */
+  transform: rotateY(180deg);
+}
+
+/* About overlay sits in front of the card and crossfades in/out */
+.aboutOverlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  will-change: opacity, transform;
+  user-select: none;
+  -webkit-user-drag: none;
+  transform-origin: center center;
+  background: transparent;
 }
